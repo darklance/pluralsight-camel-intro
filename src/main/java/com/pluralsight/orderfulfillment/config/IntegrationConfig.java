@@ -1,13 +1,15 @@
 package com.pluralsight.orderfulfillment.config;
 
+import com.pluralsight.orderfulfillment.order.OrderStatus;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.component.sql.SqlComponent;
 import org.apache.camel.spring.javaconfig.CamelConfiguration;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 
 import javax.inject.Inject;
-import java.util.ArrayList;
-import java.util.List;
+import javax.sql.DataSource;
 
 
 @Configuration
@@ -16,20 +18,26 @@ public class IntegrationConfig extends CamelConfiguration {
     @Inject
     private Environment environment;
 
-    @Override
-    public List<RouteBuilder> routes() {
-        List<RouteBuilder> builders = new ArrayList<>();
+    @Inject
+    private DataSource dataSource;
 
-        builders.add(new RouteBuilder() {
+    @Bean
+    public SqlComponent sql() {
+        SqlComponent component = new SqlComponent();
+        component.setDataSource(dataSource);
+        return component;
+    }
+
+    @Bean
+    public RouteBuilder newWebsiteOrderRoute() {
+        return new RouteBuilder() {
             @Override
             public void configure() throws Exception {
-                from("file://" + environment.getProperty("order.fulfillment.center.1.outbound.folder") + "?noop=true")
-                        .to("file://" + environment.getProperty("order.fulfillment.center.1.outbound.folder") + "/test");
-
+                from("sql:select id from orders.\"order\" where status = '" + OrderStatus.NEW.getCode()
+                        + "'?consumer.onConsume=update orders.\"order\" set status = '" + OrderStatus.PROCESSING.getCode()
+                        + "' where id = :#id")
+                        .to("log:com.pluralsite.orderfulfillment.order?level=INFO");
             }
-        });
-
-        return builders;
-
+        };
     }
 }
