@@ -1,20 +1,29 @@
 package com.pluralsight.orderfulfillment.order;
 
-import static org.junit.Assert.*;
+import com.pluralsight.orderfulfillment.test.BaseJpaRepositoryTest;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+import org.springframework.data.domain.PageRequest;
 
-import java.util.*;
+import javax.inject.Inject;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Set;
 
-import javax.inject.*;
-
-import org.junit.*;
-import org.springframework.data.domain.*;
-
-import com.pluralsight.orderfulfillment.test.*;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 
 public class OrderRepositoryTest extends BaseJpaRepositoryTest {
 
    @Inject
    private OrderRepository orderRepository;
+
+   @Inject
+   private OrderService orderService;
 
    @Before
    public void setUp() throws Exception {
@@ -47,6 +56,10 @@ public class OrderRepositoryTest extends BaseJpaRepositoryTest {
    @Test
    public void test_findOrdersByOrderStatusOrderByTimeOrderPlacedAscSuccess()
          throws Exception {
+      List<Order> currentOrders = orderService.getOrderDetails(OrderStatus.PROCESSING,
+              100);
+      orderService.processOrderStatusUpdate(currentOrders, OrderStatus.NEW);
+
       Iterable<OrderEntity> orders = orderRepository.findByStatus(
             OrderStatus.NEW.getCode(), new PageRequest(0, 5));
       assertNotNull(orders);

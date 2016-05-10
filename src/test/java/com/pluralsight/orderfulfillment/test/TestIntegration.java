@@ -2,7 +2,10 @@ package com.pluralsight.orderfulfillment.test;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
@@ -11,7 +14,11 @@ import javax.sql.DataSource;
  * Created by bsmith on 5/3/2016.
  */
 @Configuration
+@Profile("derby")
+@ComponentScan(basePackages = "com.pluralsight.orderfulfillment.order")
+@PropertySource("classpath:derby.properties")
 public class TestIntegration {
+
 
     @Bean
     public DataSource dataSource() {

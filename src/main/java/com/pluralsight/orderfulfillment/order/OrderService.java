@@ -1,6 +1,6 @@
 package com.pluralsight.orderfulfillment.order;
 
-import java.util.*;
+import java.util.List;
 
 /**
  * Interface for order functionality
@@ -51,4 +51,5 @@ public interface OrderService {
     */
    List<OrderItem> getOrderItems(long id);
 
+   String processCreateOrderMessage(long id) throws Exception;
 }

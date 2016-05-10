@@ -1,25 +1,29 @@
 package com.pluralsight.orderfulfillment.test;
 
-import javax.persistence.*;
-
-import org.junit.*;
-import org.junit.runner.*;
-import org.springframework.test.context.*;
-import org.springframework.test.context.junit4.*;
-import org.springframework.test.context.support.*;
-import org.springframework.test.context.transaction.*;
+import org.junit.Ignore;
+import org.junit.runner.RunWith;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.TestExecutionListeners;
+import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.test.context.support.DependencyInjectionTestExecutionListener;
+import org.springframework.test.context.support.DirtiesContextTestExecutionListener;
+import org.springframework.test.context.transaction.TransactionConfiguration;
+import org.springframework.test.context.transaction.TransactionalTestExecutionListener;
 import org.springframework.test.context.web.WebAppConfiguration;
-import org.springframework.transaction.annotation.*;
+import org.springframework.transaction.annotation.Transactional;
 
-import com.pluralsight.orderfulfillment.config.*;
+import javax.persistence.EntityManager;
+import javax.persistence.PersistenceContext;
 
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = { Application.class })
+@ContextConfiguration(classes = {JPAIntegration.class})
 @WebAppConfiguration
 @TransactionConfiguration(transactionManager = "transactionManager")
 @TestExecutionListeners(listeners = { DependencyInjectionTestExecutionListener.class,
       DirtiesContextTestExecutionListener.class, TransactionalTestExecutionListener.class })
 @Transactional
+@DirtiesContext
 @Ignore
 public class BaseJpaRepositoryTest {
 

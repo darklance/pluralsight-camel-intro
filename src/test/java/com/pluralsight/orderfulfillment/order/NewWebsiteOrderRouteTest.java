@@ -1,5 +1,6 @@
 package com.pluralsight.orderfulfillment.order;
 
+import com.pluralsight.orderfulfillment.config.DataConfig;
 import com.pluralsight.orderfulfillment.config.IntegrationConfig;
 import com.pluralsight.orderfulfillment.test.TestIntegration;
 import org.junit.After;
@@ -7,6 +8,8 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 
@@ -18,7 +21,9 @@ import static org.junit.Assert.assertEquals;
  * Created by bsmith on 5/3/2016.
  */
 @RunWith(SpringJUnit4ClassRunner.class)
-@ContextConfiguration(classes = {TestIntegration.class, IntegrationConfig.class})
+@ContextConfiguration(classes = {IntegrationConfig.class, TestIntegration.class, DataConfig.class})
+@ActiveProfiles("derby")
+@DirtiesContext
 public class NewWebsiteOrderRouteTest {
 
     @Inject

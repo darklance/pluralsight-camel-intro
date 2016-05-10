@@ -1,10 +1,13 @@
 package com.pluralsight.orderfulfillment.order;
 
-import java.util.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.Modifying;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.PagingAndSortingRepository;
 
-import org.springframework.data.domain.*;
-import org.springframework.data.jpa.repository.*;
-import org.springframework.data.repository.*;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Repository for OrderEntity data.
@@ -13,7 +16,7 @@ import org.springframework.data.repository.*;
  * 
  */
 public interface OrderRepository extends
-      PagingAndSortingRepository<OrderEntity, Integer> {
+        PagingAndSortingRepository<OrderEntity, Long> {
 
    /**
     * Select all orders for the page ordered by the timeOrderPlaced value in

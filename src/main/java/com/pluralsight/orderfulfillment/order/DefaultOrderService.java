@@ -1,17 +1,30 @@
 package com.pluralsight.orderfulfillment.order;
 
-import java.util.*;
+import com.pluralsight.orderfulfillment.catalog.CatalogItem;
+import com.pluralsight.orderfulfillment.catalog.CatalogItemEntity;
+import com.pluralsight.orderfulfillment.customer.Customer;
+import com.pluralsight.orderfulfillment.customer.CustomerEntity;
+import com.pluralsight.orderfulfillment.generated.FulfillmentCenter;
+import com.pluralsight.orderfulfillment.generated.ObjectFactory;
+import com.pluralsight.orderfulfillment.generated.OrderItemType;
+import com.pluralsight.orderfulfillment.generated.OrderType;
+import com.pluralsight.orderfulfillment.order.fulfillment.FulfillmentProcessor;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
 
-import javax.inject.*;
-import javax.transaction.*;
-
-import org.slf4j.*;
-import org.springframework.data.domain.*;
-import org.springframework.stereotype.*;
-
-import com.pluralsight.orderfulfillment.catalog.*;
-import com.pluralsight.orderfulfillment.customer.*;
-import com.pluralsight.orderfulfillment.order.fulfillment.*;
+import javax.inject.Inject;
+import javax.transaction.Transactional;
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.datatype.DatatypeFactory;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.GregorianCalendar;
+import java.util.Iterator;
+import java.util.List;
 
 /**
  * Services related to orders
@@ -145,4 +158,40 @@ public class DefaultOrderService implements OrderService {
       }
    }
 
+   @Override
+   public String processCreateOrderMessage(long id) throws Exception {
+      OrderEntity orderEntity = orderRepository.findOne(id);
+      com.pluralsight.orderfulfillment.generated.Order order = buildOrderXmlType(orderEntity);
+
+      JAXBContext context = JAXBContext.newInstance(com.pluralsight.orderfulfillment.generated.Order.class);
+      Marshaller marshaller = context.createMarshaller();
+      marshaller.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+      StringWriter writer = new StringWriter();
+      marshaller.marshal(order, writer);
+      return writer.toString();
+
+   }
+
+   private com.pluralsight.orderfulfillment.generated.Order buildOrderXmlType(OrderEntity order) throws Exception {
+      ObjectFactory objectFactory = new ObjectFactory();
+      OrderType orderType = objectFactory.createOrderType();
+      orderType.setFirstName(order.getCustomer().getFirstName());
+      orderType.setLastName(order.getCustomer().getLastName());
+      orderType.setEmail(order.getCustomer().getEmail());
+      orderType.setFulfillmentCenter(FulfillmentCenter.ABC_FULFILLMENT_CENTER);
+      orderType.setOrderNumber(order.getOrderNumber());
+      GregorianCalendar cal = new GregorianCalendar();
+      cal.setTime(order.getTimeOrderPlaced());
+      orderType.setTimeOrderPlaced(DatatypeFactory.newInstance().newXMLGregorianCalendar(cal));
+      for (OrderItemEntity orderItem : order.getOrderItems()) {
+         OrderItemType orderItemType = objectFactory.createOrderItemType();
+         orderItemType.setItemNumber(orderItem.getCatalogItem().getItemNumber());
+         orderItemType.setPrice(orderItem.getPrice());
+         orderItemType.setQuantity(orderItem.getQuantity());
+         orderType.getOrderItems().add(orderItemType);
+      }
+      com.pluralsight.orderfulfillment.generated.Order orderElement = objectFactory.createOrder();
+      orderElement.setOrderType(orderType);
+      return orderElement;
+   }
 }
