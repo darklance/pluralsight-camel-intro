@@ -3,6 +3,9 @@ package com.pluralsight.orderfulfillment.order;
 import com.pluralsight.orderfulfillment.config.DataConfig;
 import com.pluralsight.orderfulfillment.config.IntegrationConfig;
 import com.pluralsight.orderfulfillment.test.TestIntegration;
+import org.apache.camel.CamelContext;
+import org.apache.camel.builder.AdviceWithRouteBuilder;
+import org.apache.camel.component.mock.MockEndpoint;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -29,6 +32,9 @@ public class NewWebsiteOrderRouteTest {
     @Inject
     private JdbcTemplate jdbcTemplate;
 
+    @Inject
+    private CamelContext context;
+
     @Before
     public void setUp() {
         jdbcTemplate.execute("insert into orders.catalogitem (id, itemnumber, itemname, itemtype) values (1, '078-1344200444', 'Build Your Own JavaScript Framework in Just 24 Hours', 'Book')");
@@ -46,6 +52,12 @@ public class NewWebsiteOrderRouteTest {
 
     @Test
     public void testNewWebsiteOrderRouteSuccess() throws Exception {
+        context.getRouteDefinitions().get(0).adviceWith(context, new AdviceWithRouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                mockEndpointsAndSkip("activemq*");
+            }
+        });
         jdbcTemplate.execute("insert into orders.\"order\" (id, customer_id, orderNumber, timeorderplaced, lastupdate, status) values (1, 1, '1001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'N')");
         jdbcTemplate.execute("insert into orders.orderitem (id, order_id, catalogitem_id, status, price, quantity, lastupdate) values (1, 1, 1, 'N', 20.00, 1, CURRENT_TIMESTAMP )");
 
@@ -53,5 +65,9 @@ public class NewWebsiteOrderRouteTest {
 
         int total = jdbcTemplate.queryForObject("select count(id) from orders.\"order\" where status = 'P'", Integer.class);
         assertEquals(1, total);
+
+        MockEndpoint mockEndpoint = (MockEndpoint) context.getEndpoint("mock:activemq:queue:ORDER_ITEM_PROCESSING");
+        mockEndpoint.expectedMessageCount(1);
+
     }
 }
