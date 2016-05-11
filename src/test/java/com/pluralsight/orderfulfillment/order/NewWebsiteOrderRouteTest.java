@@ -52,12 +52,15 @@ public class NewWebsiteOrderRouteTest {
 
     @Test
     public void testNewWebsiteOrderRouteSuccess() throws Exception {
-        context.getRouteDefinitions().get(0).adviceWith(context, new AdviceWithRouteBuilder() {
-            @Override
-            public void configure() throws Exception {
-                mockEndpointsAndSkip("activemq*");
-            }
-        });
+        for (int i = 0; i < context.getRouteDefinitions().size(); i++) {
+
+            context.getRouteDefinitions().get(i).adviceWith(context, new AdviceWithRouteBuilder() {
+                @Override
+                public void configure() throws Exception {
+                    mockEndpointsAndSkip("activemq*");
+                }
+            });
+        }
         jdbcTemplate.execute("insert into orders.\"order\" (id, customer_id, orderNumber, timeorderplaced, lastupdate, status) values (1, 1, '1001', CURRENT_TIMESTAMP, CURRENT_TIMESTAMP, 'N')");
         jdbcTemplate.execute("insert into orders.orderitem (id, order_id, catalogitem_id, status, price, quantity, lastupdate) values (1, 1, 1, 'N', 20.00, 1, CURRENT_TIMESTAMP )");
 

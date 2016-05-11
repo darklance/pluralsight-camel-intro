@@ -1,10 +1,12 @@
 package com.pluralsight.orderfulfillment.config;
 
+import com.pluralsight.orderfulfillment.generated.FulfillmentCenter;
 import com.pluralsight.orderfulfillment.order.OrderStatus;
 import org.apache.activemq.ActiveMQConnectionFactory;
 import org.apache.activemq.camel.component.ActiveMQComponent;
 import org.apache.activemq.jms.pool.PooledConnectionFactory;
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.builder.xml.Namespaces;
 import org.apache.camel.component.jms.JmsConfiguration;
 import org.apache.camel.component.sql.SqlComponent;
 import org.apache.camel.spring.javaconfig.CamelConfiguration;
@@ -72,6 +74,27 @@ public class IntegrationConfig extends CamelConfiguration {
                         + "' where id = :#id")
                         .beanRef("orderItemMessageTranslator", "transformToOrderItemMessage")
                         .to("activemq:queue:ORDER_ITEM_PROCESSING");
+            }
+        };
+    }
+
+    @Bean
+    public RouteBuilder fulfillmentCenterContentBasedRouter() {
+        return new RouteBuilder() {
+            @Override
+            public void configure() throws Exception {
+                Namespaces namespace = new Namespaces("o", "http://www.pluralsight.com/orderfullfillment/Order");
+
+                from("activemq:queue:ORDER_ITEM_PROCESSING")
+                        .choice()
+                        .when()
+                        .xpath("/o:Order/o:OrderType/o:FulfillmentCenter = '" + FulfillmentCenter.ABC_FULFILLMENT_CENTER.value()
+                                + "'", namespace)
+                        .to("activemq:queue:ABC_FULFILLMENT_REQUEST")
+                        .when()
+                        .xpath("/o:Order/o:OrderType/o:FulfillmentCenter = '" + FulfillmentCenter.FULFILLMENT_CENTER_ONE.value()
+                                + "'", namespace)
+                        .to("activemq:queue:FC1_FULFILLMENT_REQUEST").otherwise().to("activemq:queue:ERROR_FULFILLMENT_REQUEST");
             }
         };
     }
